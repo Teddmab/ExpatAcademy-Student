@@ -7,9 +7,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
-
-// Temporary auth check - replace with actual auth logic
-const isAuthenticated = () => false;
+import { isAuthenticated } from './services/auth';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (!isAuthenticated()) {
