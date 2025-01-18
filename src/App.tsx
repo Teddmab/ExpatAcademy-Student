@@ -8,6 +8,7 @@ import Register from './pages/auth/Register';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Universities from './pages/Universities';
+import CoursesMenu from './components/CoursesMenu/CoursesMenu';
 import RequireAuth from './components/Auth/RequireAuth';
 import { AuthProvider } from './context/AuthContext';
 
@@ -22,6 +23,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/courses" element={<CoursesMenu />} />
               <Route
                 path="/dashboard"
                 element={
