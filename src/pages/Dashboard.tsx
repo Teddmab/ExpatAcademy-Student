@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Clock, Award, FileCheck, Building2, User2, AlertCircle } from 'lucide-react';
+import { BookOpen, Clock, Award, FileCheck, Building2, User2, AlertCircle, Calendar, CheckCircle } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import DocumentChecklist from '../components/DocumentChecklist/DocumentChecklist';
@@ -34,6 +34,24 @@ const Dashboard = () => {
 
     fetchDashboardData();
   }, []);
+
+  const calculateTimelineProgress = () => {
+    const completedItems = timeline.filter(item => item.status === 'completed').length;
+    return Math.round((completedItems / timeline.length) * 100);
+  };
+
+  const isDeadlineApproaching = (deadline: string) => {
+    const deadlineDate = new Date(deadline);
+    const today = new Date();
+    const diffDays = Math.ceil((deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays <= 7 && diffDays > 0;
+  };
+
+  const isDeadlinePassed = (deadline: string) => {
+    const deadlineDate = new Date(deadline);
+    const today = new Date();
+    return deadlineDate < today;
+  };
 
   if (isLoading) {
     return (
@@ -78,35 +96,92 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Overall Progress */}
+        <div className="mb-8 bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-medium text-gray-900">Application Progress</h2>
+            <span className="text-sm font-medium text-gray-600">{calculateTimelineProgress()}% Complete</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div
+              className="bg-indigo-600 h-2.5 rounded-full transition-all duration-500"
+              style={{ width: `${calculateTimelineProgress()}%` }}
+            ></div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Timeline */}
           <div>
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Upcoming Deadlines</h2>
             <div className="bg-white rounded-lg shadow overflow-hidden">
-              <ul className="divide-y divide-gray-200">
-                {timeline.map((item) => (
-                  <li key={item.id} className="p-4 hover:bg-gray-50">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <Clock className="h-5 w-5 text-gray-400" />
-                        <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-900">{item.title}</p>
-                          <p className="text-sm text-gray-500">Due: {new Date(item.deadline).toLocaleDateString()}</p>
+              <div className="p-4 border-b border-gray-200">
+                <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                  <Calendar className="h-5 w-5 text-indigo-600 mr-2" />
+                  Timeline & Deadlines
+                </h2>
+              </div>
+              <div className="divide-y divide-gray-200">
+                {timeline.map((item) => {
+                  const isApproaching = isDeadlineApproaching(item.deadline);
+                  const isPassed = isDeadlinePassed(item.deadline);
+                  
+                  return (
+                    <div
+                      key={item.id}
+                      className={`p-4 transition-colors ${
+                        isApproaching
+                          ? 'bg-yellow-50'
+                          : isPassed
+                          ? 'bg-red-50'
+                          : item.status === 'completed'
+                          ? 'bg-green-50'
+                          : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          {item.status === 'completed' ? (
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                          ) : (
+                            <Clock className={`h-5 w-5 ${
+                              isApproaching
+                                ? 'text-yellow-500'
+                                : isPassed
+                                ? 'text-red-500'
+                                : 'text-gray-400'
+                            }`} />
+                          )}
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-900">{item.title}</h3>
+                            <p className="text-sm text-gray-500">
+                              Due: {new Date(item.deadline).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            item.priority === 'high'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}
+                        >
+                          {item.priority}
+                        </span>
                       </div>
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full ${
-                          item.priority === 'high'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {item.priority}
-                      </span>
+                      {isApproaching && (
+                        <p className="mt-2 text-sm text-yellow-600">
+                          Deadline approaching! Complete this task soon.
+                        </p>
+                      )}
+                      {isPassed && (
+                        <p className="mt-2 text-sm text-red-600">
+                          Deadline has passed. Please complete this task as soon as possible.
+                        </p>
+                      )}
                     </div>
-                  </li>
-                ))}
-              </ul>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
