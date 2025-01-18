@@ -20,3 +20,29 @@ export interface Lesson {
   content: string;
   duration: number;
 }
+
+export interface University {
+  id: number;
+  name: string;
+  country: string;
+  city: string;
+  logo: string;
+  tuition: {
+    min: number;
+    max: number;
+    currency: string;
+  };
+  degrees: string[];
+  ranking: number;
+  acceptanceRate: string;
+  description: string;
+  website: string;
+}
+
+export interface UniversityFilters {
+  search: string;
+  tuitionRange: string;
+  degreeType: string;
+  location: string;
+  page: number;
+}

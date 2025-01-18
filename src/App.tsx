@@ -7,6 +7,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import Universities from './pages/Universities';
 import RequireAuth from './components/Auth/RequireAuth';
 import { AuthProvider } from './context/AuthContext';
 
@@ -16,7 +17,7 @@ function App() {
       <Router>
         <div className="flex flex-col min-h-screen">
           <Navbar />
-          <main className="flex-grow">
+          <main className="flex-grow bg-gray-50">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
@@ -34,6 +35,14 @@ function App() {
                 element={
                   <RequireAuth>
                     <Profile />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/universities"
+                element={
+                  <RequireAuth>
+                    <Universities />
                   </RequireAuth>
                 }
               />
