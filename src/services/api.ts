@@ -1,15 +1,16 @@
-import axios from 'axios';
+import { mockApi } from './mockApi';
 
-const api = axios.create({
-  baseURL: '/api', // Will be configured later with actual API URL
-});
+// Use mockApi instead of axios during development
+const api = mockApi;
 
 export const setAuthToken = (token: string) => {
-  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  // Mock implementation
+  console.log('Setting auth token:', token);
 };
 
 export const removeAuthToken = () => {
-  delete api.defaults.headers.common['Authorization'];
+  // Mock implementation
+  console.log('Removing auth token');
 };
 
 export default api;

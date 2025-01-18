@@ -21,21 +21,31 @@ export interface AuthResponse {
 }
 
 export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
-  const response = await api.post<AuthResponse>('/api/login', credentials);
-  if (response.data.token) {
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
+  try {
+    const response = await api.post<AuthResponse>('/auth/login', credentials);
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
   }
-  return response.data;
 };
 
 export const register = async (data: RegisterData): Promise<AuthResponse> => {
-  const response = await api.post<AuthResponse>('/api/register', data);
-  if (response.data.token) {
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
+  try {
+    const response = await api.post<AuthResponse>('/auth/register', data);
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  } catch (error) {
+    console.error('Registration error:', error);
+    throw error;
   }
-  return response.data;
 };
 
 export const logout = () => {
