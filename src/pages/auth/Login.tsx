@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import AuthLayout from '../../components/Auth/AuthLayout';
-import { login } from '../../services/auth';
+import { useAuth } from '../../context/AuthContext';
 
 interface FormData {
   email: string;
@@ -17,6 +17,9 @@ interface FormErrors {
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const auth = useAuth();
+  
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
@@ -52,12 +55,12 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      await login(formData);
-      navigate('/dashboard');
+      await auth.login(formData);
+      const from = (location.state as any)?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
     } catch (error) {
-      console.log(error);
       setErrors({
-        general: 'Invalid email or password. Please try again.' 
+        general: 'Invalid email or password. Please try again.',
       });
     } finally {
       setIsLoading(false);
@@ -68,7 +71,7 @@ const Login = () => {
     <AuthLayout title="Sign in to your account">
       <form className="space-y-6" onSubmit={handleSubmit}>
         {errors.general && (
-          <div className="rounded-md bg-red-50 p-4">
+          <div className="bg-red-50 border-l-4 border-red-400 p-4">
             <div className="flex">
               <div className="flex-shrink-0">
                 <AlertCircle className="h-5 w-5 text-red-400" />
@@ -95,10 +98,7 @@ const Login = () => {
                 errors.email ? 'border-red-300' : 'border-gray-300'
               } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
               value={formData.email}
-              onChange={(e) => {
-                setFormData({ ...formData, email: e.target.value });
-                if (errors.email) setErrors({ ...errors, email: undefined });
-              }}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
             {errors.email && (
               <p className="mt-1 text-sm text-red-600">{errors.email}</p>
@@ -121,10 +121,7 @@ const Login = () => {
                 errors.password ? 'border-red-300' : 'border-gray-300'
               } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
               value={formData.password}
-              onChange={(e) => {
-                setFormData({ ...formData, password: e.target.value });
-                if (errors.password) setErrors({ ...errors, password: undefined });
-              }}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
             {errors.password && (
               <p className="mt-1 text-sm text-red-600">{errors.password}</p>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import AuthLayout from '../../components/Auth/AuthLayout';
-import { register } from '../../services/auth';
+import { useAuth } from '../../context/AuthContext';
 
 interface FormData {
   name: string;
@@ -21,6 +21,8 @@ interface FormErrors {
 
 const Register = () => {
   const navigate = useNavigate();
+  const auth = useAuth();
+  
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
@@ -69,11 +71,9 @@ const Register = () => {
     setIsLoading(true);
     try {
       const { confirmPassword, ...registerData } = formData;
-      console.log(confirmPassword);
-      await register(registerData);
+      await auth.register(registerData);
       navigate('/dashboard');
     } catch (error) {
-      console.log(error);
       setErrors({
         general: 'Registration failed. Please try again.',
       });
@@ -86,7 +86,7 @@ const Register = () => {
     <AuthLayout title="Create your account">
       <form className="space-y-6" onSubmit={handleSubmit}>
         {errors.general && (
-          <div className="rounded-md bg-red-50 p-4">
+          <div className="bg-red-50 border-l-4 border-red-400 p-4">
             <div className="flex">
               <div className="flex-shrink-0">
                 <AlertCircle className="h-5 w-5 text-red-400" />
@@ -113,10 +113,7 @@ const Register = () => {
                 errors.name ? 'border-red-300' : 'border-gray-300'
               } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
               value={formData.name}
-              onChange={(e) => {
-                setFormData({ ...formData, name: e.target.value });
-                if (errors.name) setErrors({ ...errors, name: undefined });
-              }}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
             {errors.name && (
               <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -139,10 +136,7 @@ const Register = () => {
                 errors.email ? 'border-red-300' : 'border-gray-300'
               } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
               value={formData.email}
-              onChange={(e) => {
-                setFormData({ ...formData, email: e.target.value });
-                if (errors.email) setErrors({ ...errors, email: undefined });
-              }}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
             {errors.email && (
               <p className="mt-1 text-sm text-red-600">{errors.email}</p>
@@ -165,10 +159,7 @@ const Register = () => {
                 errors.password ? 'border-red-300' : 'border-gray-300'
               } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
               value={formData.password}
-              onChange={(e) => {
-                setFormData({ ...formData, password: e.target.value });
-                if (errors.password) setErrors({ ...errors, password: undefined });
-              }}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
             {errors.password && (
               <p className="mt-1 text-sm text-red-600">{errors.password}</p>
@@ -191,10 +182,7 @@ const Register = () => {
                 errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
               } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
               value={formData.confirmPassword}
-              onChange={(e) => {
-                setFormData({ ...formData, confirmPassword: e.target.value });
-                if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: undefined });
-              }}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             />
             {errors.confirmPassword && (
               <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
