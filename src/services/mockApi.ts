@@ -4,6 +4,9 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // Mock user database
 const users = new Map();
 
+// Mock user profile data
+const mockProfiles = new Map();
+
 // Mock timeline data
 const mockTimeline = [
   {
@@ -63,9 +66,36 @@ const mockDocuments = [
   }
 ];
 
+// Mock default profile
+const createDefaultProfile = (user: any) => ({
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  nationality: 'United States',
+  fieldOfInterest: 'Computer Science',
+  budget: '20000-30000',
+  preferredDestinations: ['United States', 'Canada', 'United Kingdom'],
+  phone: '+1 234 567 890',
+  bio: 'A passionate student looking to expand my horizons through international education.'
+});
+
+// Extract user ID from Bearer token
+const getUserIdFromToken = (authHeader: string) => {
+  if (!authHeader?.startsWith('Bearer ')) {
+    throw new Error('Unauthorized');
+  }
+  const token = authHeader.split(' ')[1];
+  return token.split('-')[1];
+};
+
 export const mockApi = {
+  defaults: {
+    headers: {
+      common: {} as Record<string, string>
+    }
+  },
+
   async post(endpoint: string, data: any) {
-    // Simulate network delay
     await delay(500);
 
     switch (endpoint) {
@@ -83,6 +113,7 @@ export const mockApi = {
         delete user.password;
         
         users.set(email, user);
+        mockProfiles.set(user.id, createDefaultProfile(user));
 
         return {
           data: {
@@ -93,7 +124,7 @@ export const mockApi = {
       }
 
       case '/auth/login': {
-        const { email, password } = data;
+        const { email } = data;
         const user = users.get(email);
 
         if (!user) {
@@ -122,6 +153,54 @@ export const mockApi = {
 
       case '/api/documents':
         return { data: mockDocuments };
+
+      case '/api/user/profile': {
+        try {
+          const userId = getUserIdFromToken(this.defaults.headers.common['Authorization']);
+          let profile = mockProfiles.get(userId);
+          
+          if (!profile) {
+            const user = Array.from(users.values()).find(u => u.id === userId);
+            if (!user) {
+              throw new Error('User not found');
+            }
+            profile = createDefaultProfile(user);
+            mockProfiles.set(userId, profile);
+          }
+          
+          return { data: profile };
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+          throw error;
+        }
+      }
+
+      default:
+        throw new Error(`Unhandled endpoint: ${endpoint}`);
+    }
+  },
+
+  async put(endpoint: string, data: any) {
+    await delay(500);
+
+    switch (endpoint) {
+      case '/api/user/profile': {
+        const userId = getUserIdFromToken(this.defaults.headers.common['Authorization']);
+        const existingProfile = mockProfiles.get(userId);
+        
+        if (!existingProfile) {
+          throw new Error('Profile not found');
+        }
+        
+        const updatedProfile = {
+          ...existingProfile,
+          ...data,
+          id: userId // Ensure ID doesn't change
+        };
+        
+        mockProfiles.set(userId, updatedProfile);
+        return { data: updatedProfile };
+      }
 
       default:
         throw new Error(`Unhandled endpoint: ${endpoint}`);

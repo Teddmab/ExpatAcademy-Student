@@ -1,4 +1,4 @@
-import api from './api';
+import api, { setAuthToken, removeAuthToken } from './api';
 
 export interface LoginCredentials {
   email: string;
@@ -26,6 +26,7 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      setAuthToken(response.data.token);
     }
     return response.data;
   } catch (error) {
@@ -40,6 +41,7 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      setAuthToken(response.data.token);
     }
     return response.data;
   } catch (error) {
@@ -51,8 +53,14 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
 export const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
+  removeAuthToken();
 };
 
 export const isAuthenticated = (): boolean => {
-  return !!localStorage.getItem('token');
+  const token = localStorage.getItem('token');
+  if (token) {
+    setAuthToken(token);
+    return true;
+  }
+  return false;
 };

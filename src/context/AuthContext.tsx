@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { login as apiLogin, register as apiRegister, logout as apiLogout } from '../services/auth';
+import { login as apiLogin, register as apiRegister, logout as apiLogout, isAuthenticated as checkAuth } from '../services/auth';
 import type { LoginCredentials, RegisterData } from '../services/auth';
 
 interface User {
@@ -19,27 +19,17 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    // Check for stored user data on mount
+  const [user, setUser] = useState<User | null>(() => {
     const storedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    
-    if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
-    }
-  }, []);
+    return storedUser && checkAuth() ? JSON.parse(storedUser) : null;
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(checkAuth());
 
   const login = async (credentials: LoginCredentials) => {
     try {
       const response = await apiLogin(credentials);
       setUser(response.user);
       setIsAuthenticated(true);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      localStorage.setItem('token', response.token);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -51,8 +41,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await apiRegister(data);
       setUser(response.user);
       setIsAuthenticated(true);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      localStorage.setItem('token', response.token);
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
@@ -63,8 +51,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     apiLogout();
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
   };
 
   const value = {
