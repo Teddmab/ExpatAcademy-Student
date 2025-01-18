@@ -66,6 +66,9 @@ const mockDocuments = [
   }
 ];
 
+// Mock uploaded documents storage
+const uploadedDocuments = new Map();
+
 // Mock default profile
 const createDefaultProfile = (user: any) => ({
   id: user.id,
@@ -95,7 +98,7 @@ export const mockApi = {
     }
   },
 
-  async post(endpoint: string, data: any) {
+  async post(endpoint: string, data: any, config?: any) {
     await delay(500);
 
     switch (endpoint) {
@@ -136,6 +139,40 @@ export const mockApi = {
             token: `mock-token-${user.id}`,
             user,
           },
+        };
+      }
+
+      case '/api/documents/upload': {
+        const userId = getUserIdFromToken(this.defaults.headers.common['Authorization']);
+        const documentId = data.get('documentId');
+        const file = data.get('file');
+
+        if (!documentId || !file) {
+          throw new Error('Missing required upload data');
+        }
+
+        // Simulate upload progress
+        if (config?.onUploadProgress) {
+          for (let progress = 0; progress <= 100; progress += 20) {
+            config.onUploadProgress({ loaded: progress, total: 100 });
+            await delay(500);
+          }
+        }
+
+        // Store uploaded document
+        if (!uploadedDocuments.has(userId)) {
+          uploadedDocuments.set(userId, new Map());
+        }
+        uploadedDocuments.get(userId).set(parseInt(documentId), file);
+
+        // Update document status
+        const docIndex = mockDocuments.findIndex(doc => doc.id === parseInt(documentId));
+        if (docIndex !== -1) {
+          mockDocuments[docIndex].status = 'completed';
+        }
+
+        return {
+          data: { message: 'Document uploaded successfully' }
         };
       }
 
