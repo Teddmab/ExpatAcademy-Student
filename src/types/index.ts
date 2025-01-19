@@ -37,6 +37,8 @@ export interface University {
   acceptanceRate: string;
   description: string;
   website: string;
+  language?: string;
+  duration?: string;
 }
 
 export interface UniversityFilters {
@@ -44,5 +46,7 @@ export interface UniversityFilters {
   tuitionRange: string;
   degreeType: string;
   location: string;
+  language: string;
+  duration: string;
   page: number;
 }
