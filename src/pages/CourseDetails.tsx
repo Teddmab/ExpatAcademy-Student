@@ -1,6 +1,7 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Clock, Star, Users, DollarSign, BookOpen, CheckCircle, PlayCircle } from 'lucide-react';
+import { useBasket } from '../context/BasketContext';
 
 const mockCourseDetails = {
   id: '1',
@@ -57,7 +58,31 @@ The course combines practical knowledge with real-world experiences from success
 
 const CourseDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { addToBasket } = useBasket();
   const course = mockCourseDetails; // In real app, fetch based on id
+
+  const handleEnrollment = () => {
+    // Add to basket
+    addToBasket({
+      id: course.id,
+      name: course.name,
+      description: course.description,
+      price: course.price
+    });
+
+    // Navigate to payment
+    navigate('/payment', {
+      state: {
+        paymentDetails: {
+          type: 'course',
+          amount: course.price,
+          currency: 'USD',
+          description: `Enrollment for ${course.name}`,
+        }
+      }
+    });
+  };
 
   return (
     <div className="py-8">
@@ -155,7 +180,10 @@ const CourseDetails = () => {
                 </div>
               </div>
 
-              <button className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md font-medium hover:bg-indigo-700 mb-4">
+              <button
+                onClick={handleEnrollment}
+                className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md font-medium hover:bg-indigo-700 mb-4"
+              >
                 Enroll Now
               </button>
 

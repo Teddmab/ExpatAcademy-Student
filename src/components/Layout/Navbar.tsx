@@ -32,7 +32,7 @@ const Navbar = () => {
               <BookOpen className="h-5 w-5" />
               <span>Courses</span>
             </Link>
-            <Link to="/language-tests" className="flex items-center space-x-1 hover:text-indigo-200">
+            <Link to="/courses/menu" className="flex items-center space-x-1 hover:text-indigo-200">
               <Award className="h-5 w-5" />
               <span>Language Tests</span>
             </Link>
