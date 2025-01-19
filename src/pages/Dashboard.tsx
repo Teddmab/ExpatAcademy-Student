@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Clock, Award, FileCheck, Building2, User2, AlertCircle, Calendar, CheckCircle } from 'lucide-react';
+import { BookOpen, Clock, Award, FileCheck, Building2, User2, AlertCircle, Calendar, CheckCircle, DollarSign, Import as Passport, Plane, Trophy, Star } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import MilestoneTracker from '../components/MilestoneTracker/MilestoneTracker';
 import DocumentChecklist from '../components/DocumentChecklist/DocumentChecklist';
 
 interface TimelineItem {
@@ -13,17 +14,131 @@ interface TimelineItem {
   priority: string;
 }
 
+interface Milestone {
+  id: string;
+  name: string;
+  description: string;
+  status: 'completed' | 'in_progress' | 'locked' | 'upcoming';
+  icon: React.ReactNode;
+  progress?: number;
+  badge?: {
+    name: string;
+    icon: React.ReactNode;
+  };
+  actions?: {
+    name: string;
+    href: string;
+  }[];
+}
+
 const Dashboard = () => {
   const { user } = useAuth();
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [totalProgress, setTotalProgress] = useState(0);
+
+  const milestones: Milestone[] = [
+    {
+      id: 'profile',
+      name: 'Profile Setup',
+      description: 'Complete your student profile',
+      status: 'completed',
+      icon: <User2 className="h-6 w-6 text-indigo-600" />,
+      progress: 100,
+      badge: {
+        name: 'Profile Master',
+        icon: <Star className="h-5 w-5" />
+      },
+      actions: [
+        {
+          name: 'View Profile',
+          href: '/profile'
+        }
+      ]
+    },
+    {
+      id: 'university',
+      name: 'University Selection',
+      description: 'Choose your dream universities',
+      status: 'in_progress',
+      icon: <Building2 className="h-6 w-6 text-blue-600" />,
+      progress: 60,
+      actions: [
+        {
+          name: 'Browse Universities',
+          href: '/universities'
+        }
+      ]
+    },
+    {
+      id: 'documents',
+      name: 'Document Submission',
+      description: 'Upload required documents',
+      status: 'in_progress',
+      icon: <FileCheck className="h-6 w-6 text-green-600" />,
+      progress: 40,
+      actions: [
+        {
+          name: 'Upload Documents',
+          href: '#documents'
+        }
+      ]
+    },
+    {
+      id: 'payment',
+      name: 'Tuition Payment',
+      description: 'Process tuition and fees',
+      status: 'upcoming',
+      icon: <DollarSign className="h-6 w-6 text-yellow-600" />,
+      actions: [
+        {
+          name: 'Make Payment',
+          href: '/payment'
+        }
+      ]
+    },
+    {
+      id: 'visa',
+      name: 'Visa Application',
+      description: 'Apply for student visa',
+      status: 'locked',
+      icon: <Passport className="h-6 w-6 text-purple-600" />,
+      actions: [
+        {
+          name: 'Start Application',
+          href: '#visa'
+        }
+      ]
+    },
+    {
+      id: 'travel',
+      name: 'Travel Preparation',
+      description: 'Plan your journey',
+      status: 'locked',
+      icon: <Plane className="h-6 w-6 text-red-600" />,
+      actions: [
+        {
+          name: 'View Checklist',
+          href: '#travel'
+        }
+      ]
+    }
+  ];
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         const timelineRes = await api.get('/api/timeline');
         setTimeline(timelineRes.data);
+        
+        // Calculate total progress
+        const completedMilestones = milestones.filter(m => m.status === 'completed').length;
+        const inProgressMilestones = milestones.filter(m => m.status === 'in_progress').length;
+        const totalProgress = Math.round(
+          ((completedMilestones + inProgressMilestones * 0.5) / milestones.length) * 100
+        );
+        setTotalProgress(totalProgress);
       } catch (err) {
         setError('Failed to load dashboard data');
         console.error('Dashboard data fetch error:', err);
@@ -34,24 +149,6 @@ const Dashboard = () => {
 
     fetchDashboardData();
   }, []);
-
-  const calculateTimelineProgress = () => {
-    const completedItems = timeline.filter(item => item.status === 'completed').length;
-    return Math.round((completedItems / timeline.length) * 100);
-  };
-
-  const isDeadlineApproaching = (deadline: string) => {
-    const deadlineDate = new Date(deadline);
-    const today = new Date();
-    const diffDays = Math.ceil((deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return diffDays <= 7 && diffDays > 0;
-  };
-
-  const isDeadlinePassed = (deadline: string) => {
-    const deadlineDate = new Date(deadline);
-    const today = new Date();
-    return deadlineDate < today;
-  };
 
   if (isLoading) {
     return (
@@ -76,8 +173,12 @@ const Dashboard = () => {
   return (
     <div className="py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Welcome Section */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900">Welcome back, {user?.name}</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.name}!</h1>
+            <p className="mt-1 text-gray-600">Track your progress and complete the next steps in your journey.</p>
+          </div>
           <div className="flex space-x-4">
             <Link
               to="/profile"
@@ -96,100 +197,18 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Overall Progress */}
-        <div className="mb-8 bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-medium text-gray-900">Application Progress</h2>
-            <span className="text-sm font-medium text-gray-600">{calculateTimelineProgress()}% Complete</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div
-              className="bg-indigo-600 h-2.5 rounded-full transition-all duration-500"
-              style={{ width: `${calculateTimelineProgress()}%` }}
-            ></div>
-          </div>
+        {/* Milestone Tracker */}
+        <div className="mb-8">
+          <MilestoneTracker
+            milestones={milestones}
+            totalProgress={totalProgress}
+          />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Timeline */}
-          <div>
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="p-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                  <Calendar className="h-5 w-5 text-indigo-600 mr-2" />
-                  Timeline & Deadlines
-                </h2>
-              </div>
-              <div className="divide-y divide-gray-200">
-                {timeline.map((item) => {
-                  const isApproaching = isDeadlineApproaching(item.deadline);
-                  const isPassed = isDeadlinePassed(item.deadline);
-                  
-                  return (
-                    <div
-                      key={item.id}
-                      className={`p-4 transition-colors ${
-                        isApproaching
-                          ? 'bg-yellow-50'
-                          : isPassed
-                          ? 'bg-red-50'
-                          : item.status === 'completed'
-                          ? 'bg-green-50'
-                          : ''
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          {item.status === 'completed' ? (
-                            <CheckCircle className="h-5 w-5 text-green-500" />
-                          ) : (
-                            <Clock className={`h-5 w-5 ${
-                              isApproaching
-                                ? 'text-yellow-500'
-                                : isPassed
-                                ? 'text-red-500'
-                                : 'text-gray-400'
-                            }`} />
-                          )}
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-900">{item.title}</h3>
-                            <p className="text-sm text-gray-500">
-                              Due: {new Date(item.deadline).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        <span
-                          className={`px-2 py-1 text-xs rounded-full ${
-                            item.priority === 'high'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}
-                        >
-                          {item.priority}
-                        </span>
-                      </div>
-                      {isApproaching && (
-                        <p className="mt-2 text-sm text-yellow-600">
-                          Deadline approaching! Complete this task soon.
-                        </p>
-                      )}
-                      {isPassed && (
-                        <p className="mt-2 text-sm text-red-600">
-                          Deadline has passed. Please complete this task as soon as possible.
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Document Checklist */}
-          <div>
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Document Checklist</h2>
-            <DocumentChecklist />
-          </div>
+        {/* Document Checklist */}
+        <div id="documents">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Document Checklist</h2>
+          <DocumentChecklist />
         </div>
       </div>
     </div>
