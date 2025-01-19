@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { GraduationCap, User, BookOpen, Home, LogOut, Award } from 'lucide-react';
+import { GraduationCap, User, BookOpen, Home, LogOut, Award, User2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const Navbar = () => {
@@ -32,7 +32,7 @@ const Navbar = () => {
               <BookOpen className="h-5 w-5" />
               <span>Courses</span>
             </Link>
-            <Link to="/courses/language-tests" className="flex items-center space-x-1 hover:text-indigo-200">
+            <Link to="/language-tests" className="flex items-center space-x-1 hover:text-indigo-200">
               <Award className="h-5 w-5" />
               <span>Language Tests</span>
             </Link>
@@ -41,6 +41,10 @@ const Navbar = () => {
                 <Link to="/dashboard" className="flex items-center space-x-1 hover:text-indigo-200">
                   <User className="h-5 w-5" />
                   <span>Dashboard</span>
+                </Link>
+                <Link to="/profile" className="flex items-center space-x-1 hover:text-indigo-200">
+                  <User2 className="h-5 w-5" />
+                  <span>Profile</span>
                 </Link>
                 <button
                   onClick={handleLogout}
