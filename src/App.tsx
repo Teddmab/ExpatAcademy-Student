@@ -9,6 +9,10 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Universities from './pages/Universities';
 import CoursesMenu from './components/CoursesMenu/CoursesMenu';
+import CoursesAndTests from './components/CoursesAndTests/CoursesAndTests';
+import CourseDetails from './pages/CourseDetails';
+import IELTSPreparation from './pages/exam-prep/IELTSPreparation';
+import TOEFLPreparation from './pages/exam-prep/TOEFLPreparation';
 import RequireAuth from './components/Auth/RequireAuth';
 import { AuthProvider } from './context/AuthContext';
 
@@ -23,7 +27,11 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/courses" element={<CoursesMenu />} />
+              <Route path="/courses" element={<CoursesAndTests />} />
+              <Route path="/courses/:id" element={<CourseDetails />} />
+              <Route path="/courses/language-tests" element={<CoursesMenu />} />
+              <Route path="/courses/ielts-academic-preparation" element={<IELTSPreparation />} />
+              <Route path="/courses/toefl-ibt-preparation" element={<TOEFLPreparation />} />
               <Route
                 path="/dashboard"
                 element={
