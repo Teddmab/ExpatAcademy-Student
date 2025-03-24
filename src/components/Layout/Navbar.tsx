@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { GraduationCap, User, BookOpen, Home, LogOut, Award, User2 } from 'lucide-react';
+import { GraduationCap, User, BookOpen, Home, LogOut, Award, User2, FileText } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const Navbar = () => {
@@ -35,6 +35,10 @@ const Navbar = () => {
             <Link to="/courses/menu" className="flex items-center space-x-1 hover:text-indigo-200">
               <Award className="h-5 w-5" />
               <span>Language Tests</span>
+            </Link>
+            <Link to="/api-docs" className="flex items-center space-x-1 hover:text-indigo-200">
+              <FileText className="h-5 w-5" />
+              <span>API Docs</span>
             </Link>
             {isAuthenticated ? (
               <>

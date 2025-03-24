@@ -14,6 +14,7 @@ import CourseDetails from './pages/CourseDetails';
 import IELTSPreparation from './pages/exam-prep/IELTSPreparation';
 import TOEFLPreparation from './pages/exam-prep/TOEFLPreparation';
 import RequireAuth from './components/Auth/RequireAuth';
+import ApiDocs from './pages/ApiDocs';
 import { AuthProvider } from './context/AuthContext';
 import { BasketProvider } from './context/BasketContext';
 import PaymentPage from './pages/PaymentPage';
@@ -36,6 +37,7 @@ function App() {
                 <Route path="/courses/ielts-academic-preparation" element={<IELTSPreparation />} />
                 <Route path="/courses/toefl-ibt-preparation" element={<TOEFLPreparation />} />
                 <Route path="/payment" element={<PaymentPage />} />
+                <Route path="/api-docs" element={<ApiDocs />} />
                 <Route
                   path="/dashboard"
                   element={

@@ -1,0 +1,784 @@
+openapi: 3.0.3
+info:
+  title: ExpatAcademy API
+  description: |
+    API documentation for ExpatAcademy - A platform for international students to prepare for studying abroad.
+    
+    This API provides endpoints for:
+    - User authentication and profile management
+    - University search and recommendations
+    - Course management and enrollment
+    - Document management
+    - Payment processing
+  version: 1.0.0
+  contact:
+    name: ExpatAcademy Support
+    email: support@expatacademy.com
+    url: https://expatacademy.com/support
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.expatacademy.com/v1
+    description: Production server
+  - url: https://staging-api.expatacademy.com/v1
+    description: Staging server
+  - url: http://localhost:3000/v1
+    description: Local development server
+
+tags:
+  - name: Authentication
+    description: User authentication endpoints
+  - name: Users
+    description: User profile and settings management
+  - name: Universities
+    description: University search and management
+  - name: Courses
+    description: Course management and enrollment
+  - name: Documents
+    description: Document upload and management
+  - name: Payments
+    description: Payment processing and transaction management
+  - name: Timeline
+    description: Student journey timeline management
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Create a new user account with basic profile information
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: john.doe@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: securePassword123
+      responses:
+        '201':
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and receive access token
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: john.doe@example.com
+                password:
+                  type: string
+                  format: password
+                  example: securePassword123
+      responses:
+        '200':
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /user/profile:
+    get:
+      tags:
+        - Users
+      summary: Get user profile
+      description: Retrieve the current user's profile information
+      operationId: getUserProfile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    put:
+      tags:
+        - Users
+      summary: Update user profile
+      description: Update the current user's profile information
+      operationId: updateUserProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfile'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /universities:
+    get:
+      tags:
+        - Universities
+      summary: Search universities
+      description: Search and filter universities based on various criteria
+      operationId: searchUniversities
+      parameters:
+        - name: search
+          in: query
+          description: Search term for university name or location
+          schema:
+            type: string
+        - name: tuitionRange
+          in: query
+          description: Tuition fee range filter
+          schema:
+            type: string
+            enum: [0-5000, 5001-10000, 10001-20000, 20001-30000, 30001-50000, 50001]
+        - name: degreeType
+          in: query
+          description: Type of degree offered
+          schema:
+            type: string
+            enum: [Bachelor, Master, PhD, MBA]
+        - name: location
+          in: query
+          description: Country filter
+          schema:
+            type: string
+        - name: language
+          in: query
+          description: Language of instruction
+          schema:
+            type: string
+        - name: duration
+          in: query
+          description: Program duration
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: perPage
+          in: query
+          description: Number of results per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Universities retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  universities:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/University'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /universities/recommend:
+    post:
+      tags:
+        - Universities
+      summary: Get university recommendations
+      description: Get personalized university recommendations based on survey answers
+      operationId: getUniversityRecommendations
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                answers:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                      example: engineering
+                    career:
+                      type: string
+                      example: corporate
+                    education:
+                      type: string
+                      example: bachelors
+                    budget:
+                      type: string
+                      example: 20001-30000
+                    grades:
+                      type: string
+                      example: A
+      responses:
+        '200':
+          description: Recommendations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/University'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /universities/favorites:
+    get:
+      tags:
+        - Universities
+      summary: Get favorite universities
+      description: Retrieve user's favorite universities
+      operationId: getFavoriteUniversities
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Favorites retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/University'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    post:
+      tags:
+        - Universities
+      summary: Toggle university favorite
+      description: Add or remove a university from favorites
+      operationId: toggleUniversityFavorite
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - universityId
+              properties:
+                universityId:
+                  type: integer
+                  example: 1
+      responses:
+        '200':
+          description: Favorite status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: University added to favorites
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /documents:
+    get:
+      tags:
+        - Documents
+      summary: Get document checklist
+      description: Retrieve the list of required documents and their status
+      operationId: getDocuments
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Documents retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /documents/upload:
+    post:
+      tags:
+        - Documents
+      summary: Upload document
+      description: Upload a document file
+      operationId: uploadDocument
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - documentId
+              properties:
+                file:
+                  type: string
+                  format: binary
+                documentId:
+                  type: integer
+                  example: 1
+      responses:
+        '200':
+          description: Document uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Document uploaded successfully
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /payments/initiate:
+    post:
+      tags:
+        - Payments
+      summary: Initiate payment
+      description: Initialize a payment transaction
+      operationId: initiatePayment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - method
+                - amount
+                - currency
+                - type
+              properties:
+                method:
+                  type: string
+                  enum: [mobile_money, card, paypal, wise, revolut]
+                amount:
+                  type: number
+                  format: float
+                  example: 199.99
+                currency:
+                  type: string
+                  example: USD
+                type:
+                  type: string
+                  enum: [course, tuition, visa]
+                description:
+                  type: string
+                  example: Payment for IELTS Preparation Course
+      responses:
+        '200':
+          description: Payment initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionId:
+                    type: string
+                    example: txn_123456
+                  redirectUrl:
+                    type: string
+                    format: uri
+                    example: https://payment-gateway.com/checkout/123
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /payments/{transactionId}/status:
+    get:
+      tags:
+        - Payments
+      summary: Get payment status
+      description: Check the status of a payment transaction
+      operationId: getPaymentStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '404':
+          description: Transaction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /payments/history:
+    get:
+      tags:
+        - Payments
+      summary: Get payment history
+      description: Retrieve user's payment transaction history
+      operationId: getPaymentHistory
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Payment history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /timeline:
+    get:
+      tags:
+        - Timeline
+      summary: Get user timeline
+      description: Retrieve the user's journey timeline and upcoming deadlines
+      operationId: getTimeline
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Timeline retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimelineItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_INPUT
+        message:
+          type: string
+          example: Invalid input parameters
+        details:
+          type: array
+          items:
+            type: string
+          example: ["Email is required", "Password must be at least 6 characters"]
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+
+    UserProfile:
+      type: object
+      properties:
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        nationality:
+          type: string
+          example: United States
+        fieldOfInterest:
+          type: string
+          example: Computer Science
+        budget:
+          type: string
+          example: 20000-30000
+        preferredDestinations:
+          type: array
+          items:
+            type: string
+          example: ["United States", "Canada", "United Kingdom"]
+        phone:
+          type: string
+          example: +1 234 567 890
+        bio:
+          type: string
+          example: A passionate student looking to expand my horizons...
+
+    University:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: University of Technology
+        country:
+          type: string
+          example: United States
+        city:
+          type: string
+          example: Boston
+        logo:
+          type: string
+          format: uri
+          example: https://example.com/logo.png
+        tuition:
+          type: object
+          properties:
+            min:
+              type: number
+              example: 25000
+            max:
+              type: number
+              example: 35000
+            currency:
+              type: string
+              example: USD
+        degrees:
+          type: array
+          items:
+            type: string
+          example: ["Bachelor", "Master", "PhD"]
+        ranking:
+          type: integer
+          example: 15
+        acceptanceRate:
+          type: string
+          example: 68%
+        description:
+          type: string
+          example: A leading institution in technology and innovation
+        website:
+          type: string
+          format: uri
+          example: https://example.com
+
+    Document:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Passport
+        status:
+          type: string
+          enum: [not_started, pending, in_progress, completed]
+          example: completed
+        required:
+          type: boolean
+          example: true
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          example: txn_123456
+        type:
+          type: string
+          enum: [course, tuition, visa]
+          example: course
+        amount:
+          type: number
+          format: float
+          example: 199.99
+        currency:
+          type: string
+          example: USD
+        status:
+          type: string
+          enum: [pending, completed, failed]
+          example: completed
+        method:
+          type: string
+          enum: [mobile_money, card, paypal, wise, revolut]
+          example: card
+        description:
+          type: string
+          example: Payment for IELTS Preparation Course
+        reference:
+          type: string
+          example: REF123456
+        date:
+          type: string
+          format: date-time
+        receipt_url:
+          type: string
+          format: uri
+          example: https://example.com/receipts/123456.pdf
+
+    TimelineItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Complete Profile
+        deadline:
+          type: string
+          format: date
+          example: 2024-03-25
+        status:
+          type: string
+          enum: [pending, completed, overdue]
+          example: pending
+        priority:
+          type: string
+          enum: [low, medium, high]
+          example: high
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 100
+        totalPages:
+          type: integer
+          example: 10
+        currentPage:
+          type: integer
+          example: 1
+        perPage:
+          type: integer
+          example: 10
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

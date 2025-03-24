@@ -7,4 +7,11 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  server: {
+    // Serve swagger.yaml from the root directory
+    static: {
+      directory: '.',
+      serveRoot: '/',
+    },
+  },
 });
